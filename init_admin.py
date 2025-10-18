@@ -19,7 +19,7 @@ def init_admin():
         existing_admin = db.query(Admin).filter(Admin.username == "admin").first()
         
         if existing_admin:
-            print("❌ Admin user already exists!")
+            print("[INFO] Admin user already exists!")
             print(f"   Username: {existing_admin.username}")
             print(f"   Created at: {existing_admin.created_at}")
             return
@@ -34,13 +34,13 @@ def init_admin():
         db.commit()
         db.refresh(admin)
         
-        print("✅ Admin user created successfully!")
+        print("[SUCCESS] Admin user created successfully!")
         print(f"   Username: admin")
         print(f"   Password: hfcc2024")
         print(f"   Created at: {admin.created_at}")
         
     except Exception as e:
-        print(f"❌ Error creating admin user: {e}")
+        print(f"[ERROR] Error creating admin user: {e}")
         db.rollback()
     finally:
         db.close()
