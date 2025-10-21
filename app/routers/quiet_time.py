@@ -324,10 +324,10 @@ async def get_days_remaining_in_cycle(db: Session = Depends(get_db)):
     )
 
 
-@router.get("/entries/rotation/weeks-remaining", response_model=APIResponse)
-async def get_weeks_remaining_in_cycle(db: Session = Depends(get_db)):
+@router.get("/entries/rotation/entries-remaining", response_model=APIResponse)
+async def get_entries_remaining_in_cycle(db: Session = Depends(get_db)):
     """
-    Get the number of weeks remaining in the current rotation cycle before it loops back to the beginning.
+    Get the number of entries remaining in the current rotation cycle before it starts over.
     Public endpoint - No authentication required.
     """
     from datetime import datetime, timezone
@@ -339,7 +339,11 @@ async def get_weeks_remaining_in_cycle(db: Session = Depends(get_db)):
         return APIResponse(
             success=True,
             message="No entries available",
-            data={"weeks_remaining": 0, "total_entries": 0, "current_position": 0}
+            data={
+                "entries_remaining": 0,
+                "total_entries": 0,
+                "current_position": 0
+            }
         )
     
     # Use the same reference date and calculation as the rotation logic
@@ -350,24 +354,20 @@ async def get_weeks_remaining_in_cycle(db: Session = Depends(get_db)):
     # Calculate current position in the cycle (0-based)
     current_position = days_passed % len(entries)
     
-    # Calculate days remaining until the cycle completes
-    days_remaining = len(entries) - current_position - 1
+    # Calculate entries remaining until the cycle completes
+    entries_remaining = len(entries) - current_position - 1
     
-    # If we're at the last entry, next cycle starts tomorrow
+    # If we're at the last entry, no entries remaining
     if current_position == len(entries) - 1:
-        days_remaining = 0
-    
-    # Calculate weeks remaining (round up to include partial weeks)
-    weeks_remaining = (days_remaining + 6) // 7  # Round up division
+        entries_remaining = 0
     
     return APIResponse(
         success=True,
-        message="Weeks remaining in current cycle retrieved successfully",
+        message="Entries remaining in current cycle retrieved successfully",
         data={
-            "weeks_remaining": weeks_remaining,
-            "days_remaining": days_remaining,
+            "entries_remaining": entries_remaining,
             "total_entries": len(entries),
             "current_position": current_position,
-            "next_cycle_starts_in_days": days_remaining + 1
+            "is_last_entry": current_position == len(entries) - 1
         }
     )
