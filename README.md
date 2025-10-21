@@ -42,7 +42,7 @@ FastAPI backend for the Quiet Time Application with PostgreSQL database integrat
    
    This will create an admin user with:
    - Username: `admin`
-   - Password: `hfcc2024`
+   - Password: `password`
 
 ## Running the Application
 
