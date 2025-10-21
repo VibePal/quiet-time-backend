@@ -278,3 +278,96 @@ async def delete_entry(
         data=None
     )
 
+
+@router.get("/entries/rotation/days-remaining", response_model=APIResponse)
+async def get_days_remaining_in_cycle(db: Session = Depends(get_db)):
+    """
+    Get the number of days remaining in the current rotation cycle before it loops back to the beginning.
+    Public endpoint - No authentication required.
+    """
+    from datetime import datetime, timezone
+    
+    # Get all entries ordered by creation date (same as rotation logic)
+    entries = db.query(QuietTimeEntry).order_by(QuietTimeEntry.created_at.asc()).all()
+    
+    if not entries:
+        return APIResponse(
+            success=True,
+            message="No entries available",
+            data={"days_remaining": 0, "total_entries": 0, "current_position": 0}
+        )
+    
+    # Use the same reference date and calculation as the rotation logic
+    reference_date = datetime(2025, 1, 1, tzinfo=timezone.utc)
+    current_date = datetime.now(timezone.utc)
+    days_passed = (current_date - reference_date).days
+    
+    # Calculate current position in the cycle (0-based)
+    current_position = days_passed % len(entries)
+    
+    # Calculate days remaining until the cycle completes
+    days_remaining = len(entries) - current_position - 1
+    
+    # If we're at the last entry, next cycle starts tomorrow
+    if current_position == len(entries) - 1:
+        days_remaining = 0
+    
+    return APIResponse(
+        success=True,
+        message="Days remaining in current cycle retrieved successfully",
+        data={
+            "days_remaining": days_remaining,
+            "total_entries": len(entries),
+            "current_position": current_position,
+            "next_cycle_starts_in": days_remaining + 1
+        }
+    )
+
+
+@router.get("/entries/rotation/weeks-remaining", response_model=APIResponse)
+async def get_weeks_remaining_in_cycle(db: Session = Depends(get_db)):
+    """
+    Get the number of weeks remaining in the current rotation cycle before it loops back to the beginning.
+    Public endpoint - No authentication required.
+    """
+    from datetime import datetime, timezone
+    
+    # Get all entries ordered by creation date (same as rotation logic)
+    entries = db.query(QuietTimeEntry).order_by(QuietTimeEntry.created_at.asc()).all()
+    
+    if not entries:
+        return APIResponse(
+            success=True,
+            message="No entries available",
+            data={"weeks_remaining": 0, "total_entries": 0, "current_position": 0}
+        )
+    
+    # Use the same reference date and calculation as the rotation logic
+    reference_date = datetime(2025, 1, 1, tzinfo=timezone.utc)
+    current_date = datetime.now(timezone.utc)
+    days_passed = (current_date - reference_date).days
+    
+    # Calculate current position in the cycle (0-based)
+    current_position = days_passed % len(entries)
+    
+    # Calculate days remaining until the cycle completes
+    days_remaining = len(entries) - current_position - 1
+    
+    # If we're at the last entry, next cycle starts tomorrow
+    if current_position == len(entries) - 1:
+        days_remaining = 0
+    
+    # Calculate weeks remaining (round up to include partial weeks)
+    weeks_remaining = (days_remaining + 6) // 7  # Round up division
+    
+    return APIResponse(
+        success=True,
+        message="Weeks remaining in current cycle retrieved successfully",
+        data={
+            "weeks_remaining": weeks_remaining,
+            "days_remaining": days_remaining,
+            "total_entries": len(entries),
+            "current_position": current_position,
+            "next_cycle_starts_in_days": days_remaining + 1
+        }
+    )
