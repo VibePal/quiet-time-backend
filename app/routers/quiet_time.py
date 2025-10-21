@@ -351,14 +351,17 @@ async def get_entries_remaining_in_cycle(db: Session = Depends(get_db)):
     current_date = datetime.now(timezone.utc)
     days_passed = (current_date - reference_date).days
     
-    # Calculate current position in the cycle (0-based)
-    current_position = days_passed % len(entries)
+    # Calculate current position in the cycle (0-based for calculation)
+    current_position_0_based = days_passed % len(entries)
+    
+    # Convert to 1-based for user display
+    current_position = current_position_0_based + 1
     
     # Calculate entries remaining until the cycle completes
-    entries_remaining = len(entries) - current_position - 1
+    entries_remaining = len(entries) - current_position_0_based - 1
     
     # If we're at the last entry, no entries remaining
-    if current_position == len(entries) - 1:
+    if current_position_0_based == len(entries) - 1:
         entries_remaining = 0
     
     return APIResponse(
@@ -368,6 +371,6 @@ async def get_entries_remaining_in_cycle(db: Session = Depends(get_db)):
             "entries_remaining": entries_remaining,
             "total_entries": len(entries),
             "current_position": current_position,
-            "is_last_entry": current_position == len(entries) - 1
+            "is_last_entry": current_position_0_based == len(entries) - 1
         }
     )
